@@ -4,5 +4,6 @@
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="gettingOpeningTimes">Getting opening-times...</string>
+    <string name="gettingBookDetails">Getting book details...</string>
 
 </resources>
