@@ -1,9 +1,13 @@
 package com.kenan.library;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -21,7 +25,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.webkit.WebView;
 
-public class DownloadBookDetails extends AsyncTask<Void, Void, String> {
+public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 
 	public static final String BASE_URL = "http://library.brunel.ac.uk";
 
@@ -36,8 +40,66 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, String> {
 	}
 
 	@Override
-	protected String doInBackground(Void... params) {
-		return download();
+	protected List<Book> doInBackground(Void... params) {
+		String html;
+		if (MainActivity.DEBUG) {
+			Log.v(TAG, "Loading from file...");
+			html = loadFile();
+		} else {
+			html = download();
+		}
+		Log.v(TAG, "parsing...");
+		return parse(html);
+	}
+
+	private List<Book> parse(String html) {
+		Document doc = Jsoup.parse(html);
+
+		// Labels contain the author and title of a book. they each have an
+		// attribute called "for" which has a value of RENEW{digit}
+		Elements labels = doc.getElementsByAttributeValueMatching("for",
+				"RENEW\\d");
+		Log.v(TAG, "found " + labels.size() + " books");
+
+		Elements strongTags = doc.getElementsByTag("strong");
+		int itemsEligibleForRenewal = Integer.parseInt(strongTags.remove(0)
+				.text());
+
+		if (labels.size() != itemsEligibleForRenewal) {
+			Log.e(TAG, "Parsing disreprenceny!");
+		}
+
+		List<Book> books = new LinkedList<Book>();
+		for (int i = 0; i < labels.size(); i++) {
+			Element label = labels.get(i);
+			Element date = strongTags.get(i * 2);
+			Element timesRenewed = strongTags.get(i * 2 + 1);
+			Log.v(TAG, "Label: " + label.text());
+			Log.v(TAG, "date: " + date.text());
+			Log.v(TAG, "timesRenewd: " + timesRenewed.text());
+			books.add(new Book(label.text(), date.text(), timesRenewed.text()));
+		}
+		return books;
+	}
+
+	private String loadFile() {
+		BufferedReader br;
+		StringBuilder sb = new StringBuilder();
+
+		try {
+			br = new BufferedReader(new FileReader("sdcard/temp.html"));
+			String line = br.readLine();
+
+			while (line != null) {
+				sb.append(line);
+				sb.append("\n");
+				line = br.readLine();
+			}
+			br.close();
+		} catch (Exception e) {
+			Log.v(TAG, e.toString());
+		}
+		return sb.toString();
 	}
 
 	private String download() {
@@ -59,7 +121,7 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, String> {
 			response = httpClient.execute(get);
 			html = EntityUtils.toString(response.getEntity());
 
-			//Login
+			// Login
 			String postURL = findPostURL(html);
 			HttpPost post = new HttpPost(postURL);
 			// TODO: Move away from hard coding user_id
@@ -67,18 +129,16 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, String> {
 			post.setEntity(new StringEntity(data));
 			response = httpClient.execute(post);
 			html = EntityUtils.toString(response.getEntity());
-			
+
 			nextLink = findLinkCalled("My Account", html);
 			get = new HttpGet(nextLink);
 			response = httpClient.execute(get);
 			html = EntityUtils.toString(response.getEntity());
-			
+
 			nextLink = findLinkCalled("Renew My Materials", html);
 			get = new HttpGet(nextLink);
 			response = httpClient.execute(get);
 			html = EntityUtils.toString(response.getEntity());
-
-			appendLog(html);
 
 			Log.v(TAG, html);
 			return html;
@@ -113,8 +173,8 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, String> {
 	}
 
 	@Override
-	protected void onPostExecute(String data) {
-		webView.loadData(data, "html/text", "UTF-8");
+	protected void onPostExecute(List<Book> books) {
+		webView.loadData("done", "html/text", "UTF-8");
 	}
 
 	public void appendLog(String text) {

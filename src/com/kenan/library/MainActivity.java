@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
+	public static final boolean DEBUG = true;
+
 	TextView closingTimes;
 	WebView webView;
 
