@@ -3,15 +3,6 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-    <WebView
-        android:id="@+id/webView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/closingTimes"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true" />
-
     <TextView
         android:id="@+id/closingTimes"
         android:layout_width="wrap_content"
@@ -21,5 +12,15 @@
         android:layout_marginBottom="18dp"
         android:text="@string/gettingOpeningTimes"
         tools:context=".MainActivity" />
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/closingTimes"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" >
+
+    </ListView>
 
 </RelativeLayout>

@@ -5,5 +5,8 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="gettingOpeningTimes">Getting opening-times...</string>
     <string name="gettingBookDetails">Getting book details...</string>
-
+    <string name="title">Title</string>
+    <string name="date_due">Date Due:</string>
+    <string name="renewals">Renewals:</string>
+        
 </resources>

@@ -21,11 +21,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.webkit.WebView;
+import android.widget.ListView;
 
-public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
+public class DownloadBookDetails extends AsyncTask<Void, Void, Book[]> {
 
 	public static final String BASE_URL = "http://library.brunel.ac.uk";
 
@@ -33,14 +34,16 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 
 	private HttpClient httpClient = new DefaultHttpClient();
 
-	WebView webView;
+	private ListView list;
+	private Context context;
 
-	public DownloadBookDetails(WebView bookDetails) {
-		this.webView = bookDetails;
+	public DownloadBookDetails(Context context, ListView list) {
+		this.context = context;
+		this.list = list;
 	}
 
 	@Override
-	protected List<Book> doInBackground(Void... params) {
+	protected Book[] doInBackground(Void... params) {
 		String html;
 		if (MainActivity.DEBUG) {
 			Log.v(TAG, "Loading from file...");
@@ -52,7 +55,7 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 		return parse(html);
 	}
 
-	private List<Book> parse(String html) {
+	private Book[] parse(String html) {
 		Document doc = Jsoup.parse(html);
 
 		// Labels contain the author and title of a book. they each have an
@@ -79,7 +82,7 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 			Log.v(TAG, "timesRenewd: " + timesRenewed.text());
 			books.add(new Book(label.text(), date.text(), timesRenewed.text()));
 		}
-		return books;
+		return books.toArray(new Book[books.size()]);
 	}
 
 	private String loadFile() {
@@ -173,8 +176,8 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 	}
 
 	@Override
-	protected void onPostExecute(List<Book> books) {
-		webView.loadData("done", "html/text", "UTF-8");
+	protected void onPostExecute(Book[] books) {
+		list.setAdapter(new BookAdapter(context, books));
 	}
 
 	public void appendLog(String text) {

@@ -2,10 +2,8 @@ package com.kenan.library;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.widget.ListView;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -13,31 +11,25 @@ public class MainActivity extends Activity {
 	public static final boolean DEBUG = true;
 
 	TextView closingTimes;
-	WebView webView;
-
+	ListView list;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		Log.v("MainActivity", "MainActivity onCreate");
-		webView = (WebView) findViewById(R.id.webView);
-		webView.setWebViewClient(new WebViewClient() {
-			@Override
-			public boolean shouldOverrideUrlLoading(WebView view, String url) {
-				view.loadUrl(url);
-				return true;
-			}
-		});
-
+		
+		list = (ListView) findViewById(R.id.list);
 		closingTimes = (TextView) findViewById(R.id.closingTimes);
-
+		
+		list.setAdapter(new BookAdapter(this, new Book[0]));
+		
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
 		// new DownloadClosingTimes(closingTimes).execute();
-		new DownloadBookDetails(webView).execute();
+		new DownloadBookDetails(this, list).execute();
 	}
 
 	@Override

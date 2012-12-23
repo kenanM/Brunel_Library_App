@@ -5,12 +5,24 @@ import java.io.Serializable;
 public class Book implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	String title, date, renewals;
+	private String title, date, renewals;
 
 	public Book(String title, String date, String renewals) {
 		this.title = title;
 		this.date = date;
 		this.renewals = renewals;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public String getDateDue() {
+		return date;
+	}
+
+	public String getRenewals() {
+		return renewals;
 	}
 
 	public String toJson() {
