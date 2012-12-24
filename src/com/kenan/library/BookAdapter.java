@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class BookAdapter extends ArrayAdapter<Book> {
@@ -21,10 +20,10 @@ public class BookAdapter extends ArrayAdapter<Book> {
 
 	public View getView(int position, View convertView, ViewGroup parent) {
 		Book book = values[position];
-		
+
 		LayoutInflater inflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		
+
 		View rowView = inflater.inflate(R.layout.row_layout, parent, false);
 		TextView title = (TextView) rowView.findViewById(R.id.title);
 		TextView date_due = (TextView) rowView.findViewById(R.id.date_due);
@@ -32,7 +31,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
 
 		title.setText(book.getTitle());
 		date_due.setText(context.getText(R.string.date_due) + book.getDateDue());
-		renewals.setText(context.getText(R.string.renewals)
+		renewals.setText(context.getText(R.string.renewals).toString()
 				+ book.getRenewals());
 
 		return rowView;

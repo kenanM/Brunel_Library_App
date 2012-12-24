@@ -29,7 +29,7 @@ public class MainActivity extends Activity {
 	public void onResume() {
 		super.onResume();
 		// new DownloadClosingTimes(closingTimes).execute();
-		new DownloadBookDetails(this, list).execute();
+		new DownloadBookDetails(this).execute();
 	}
 
 	@Override

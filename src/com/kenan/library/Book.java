@@ -5,11 +5,12 @@ import java.io.Serializable;
 public class Book implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private String title, date, renewals;
+	private String title, dueDate; 
+	private int renewals;
 
-	public Book(String title, String date, String renewals) {
+	public Book(String title, String dueDate, int renewals) {
 		this.title = title;
-		this.date = date;
+		this.dueDate = dueDate;
 		this.renewals = renewals;
 	}
 
@@ -18,20 +19,20 @@ public class Book implements Serializable {
 	}
 
 	public String getDateDue() {
-		return date;
+		return dueDate;
 	}
 
-	public String getRenewals() {
+	public int getRenewals() {
 		return renewals;
 	}
 
 	public String toJson() {
 		return String.format(
 				"{\"title\":\"&s\", \"date\":\"&s\",\"renewals\":\"s\"}",
-				title, date, renewals);
+				title, dueDate, renewals);
 	}
 
 	public String toString() {
-		return title + " " + date + " " + renewals;
+		return title + " " + dueDate + " " + renewals;
 	}
 }

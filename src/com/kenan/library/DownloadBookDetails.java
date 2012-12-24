@@ -24,26 +24,22 @@ import org.jsoup.select.Elements;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.ListView;
 
-public class DownloadBookDetails extends AsyncTask<Void, Void, Book[]> {
+public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 
 	public static final String BASE_URL = "http://library.brunel.ac.uk";
 
 	private static final String TAG = "DownloadBookDetails";
 
 	private HttpClient httpClient = new DefaultHttpClient();
-
-	private ListView list;
 	private Context context;
 
-	public DownloadBookDetails(Context context, ListView list) {
+	public DownloadBookDetails(Context context) {
 		this.context = context;
-		this.list = list;
 	}
 
 	@Override
-	protected Book[] doInBackground(Void... params) {
+	protected List<Book> doInBackground(Void... params) {
 		String html;
 		if (MainActivity.DEBUG) {
 			Log.v(TAG, "Loading from file...");
@@ -55,7 +51,7 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, Book[]> {
 		return parse(html);
 	}
 
-	private Book[] parse(String html) {
+	private List<Book> parse(String html) {
 		Document doc = Jsoup.parse(html);
 
 		// Labels contain the author and title of a book. they each have an
@@ -76,13 +72,14 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, Book[]> {
 		for (int i = 0; i < labels.size(); i++) {
 			Element label = labels.get(i);
 			Element date = strongTags.get(i * 2);
-			Element timesRenewed = strongTags.get(i * 2 + 1);
+			Element renewalElement = strongTags.get(i * 2 + 1);
+			int renewals = Integer.parseInt(renewalElement.text());
 			Log.v(TAG, "Label: " + label.text());
 			Log.v(TAG, "date: " + date.text());
-			Log.v(TAG, "timesRenewd: " + timesRenewed.text());
-			books.add(new Book(label.text(), date.text(), timesRenewed.text()));
+			Log.v(TAG, "Renewals: " + renewals);
+			books.add(new Book(label.text(), date.text(), renewals));
 		}
-		return books.toArray(new Book[books.size()]);
+		return books;
 	}
 
 	private String loadFile() {
@@ -176,8 +173,9 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, Book[]> {
 	}
 
 	@Override
-	protected void onPostExecute(Book[] books) {
-		list.setAdapter(new BookAdapter(context, books));
+	protected void onPostExecute(List<Book> books) {
+		BookDataSource dataSource = new BookDataSource(context);
+		dataSource.addBooks(books);
 	}
 
 	public void appendLog(String text) {
@@ -198,7 +196,6 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, Book[]> {
 			buf.newLine();
 			buf.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

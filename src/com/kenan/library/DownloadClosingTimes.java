@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-//import org.jsoup.Jsoup;
-//import org.jsoup.nodes.Document;
-//import org.jsoup.nodes.Element;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -61,13 +61,13 @@ public class DownloadClosingTimes extends AsyncTask<Void, Void, String> {
 	}
 
 	/** Extracts out the Opening-times */
-	/*private String parseText(String html) {
+	private String parseText(String html) {
 		Document doc = Jsoup.parse(html);
 		Element element = doc.getElementById("opening-hours");
 		if (element == null)
 			return "";
 		return "Opening-times: \n" + element.text();
-	}*/
+	}
 
 	@Override
 	protected String doInBackground(Void... params) {
