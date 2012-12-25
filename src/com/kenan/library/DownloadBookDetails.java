@@ -21,37 +21,44 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import android.content.Context;
-import android.os.AsyncTask;
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
 import android.util.Log;
 
-public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
+public class DownloadBookDetails extends Service {
 
-	public static final String BASE_URL = "http://library.brunel.ac.uk";
-
+	public static final String UPDATED_BOOK_DATABASE_INTENT = "com.kenan.library.update";
+	private static final String BASE_URL = "http://library.brunel.ac.uk";
 	private static final String TAG = "DownloadBookDetails";
 
 	private HttpClient httpClient = new DefaultHttpClient();
-	private Context context;
-
-	public DownloadBookDetails(Context context) {
-		this.context = context;
-	}
 
 	@Override
-	protected List<Book> doInBackground(Void... params) {
-		String html;
+	public int onStartCommand(Intent intent, int flags, int startId) {
+
+		String bookDetailsPage;
 		if (MainActivity.DEBUG) {
 			Log.v(TAG, "Loading from file...");
-			html = loadFile();
+			bookDetailsPage = loadBookDetailsFromFile();
 		} else {
-			html = download();
+			bookDetailsPage = downloadBookDetails();
 		}
-		Log.v(TAG, "parsing...");
-		return parse(html);
+
+		List<Book> books = parse(bookDetailsPage);
+
+		BookDataSource dataSource = new BookDataSource(this);
+		dataSource.deleteBooks();
+		dataSource.addBooks(books);
+		sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
+
+		// Stop the service
+		return START_NOT_STICKY;
 	}
 
 	private List<Book> parse(String html) {
+		Log.v(TAG, "parsing...");
+
 		Document doc = Jsoup.parse(html);
 
 		// Labels contain the author and title of a book. they each have an
@@ -82,7 +89,8 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 		return books;
 	}
 
-	private String loadFile() {
+	// TODO remove from release build.
+	private String loadBookDetailsFromFile() {
 		BufferedReader br;
 		StringBuilder sb = new StringBuilder();
 
@@ -102,7 +110,7 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 		return sb.toString();
 	}
 
-	private String download() {
+	private String downloadBookDetails() {
 		String result = "";
 		try {
 
@@ -172,12 +180,6 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 		return "Error";
 	}
 
-	@Override
-	protected void onPostExecute(List<Book> books) {
-		BookDataSource dataSource = new BookDataSource(context);
-		dataSource.addBooks(books);
-	}
-
 	public void appendLog(String text) {
 		File logFile = new File("sdcard/log.file");
 		if (!logFile.exists()) {
@@ -198,6 +200,11 @@ public class DownloadBookDetails extends AsyncTask<Void, Void, List<Book>> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public IBinder onBind(Intent intent) {
+		throw new UnsupportedOperationException();
 	}
 
 }

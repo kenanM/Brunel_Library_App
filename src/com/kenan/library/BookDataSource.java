@@ -11,9 +11,11 @@ import java.util.List;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Handler;
 import android.util.Log;
 
 public class BookDataSource {
@@ -32,7 +34,7 @@ public class BookDataSource {
 	public void open() throws SQLException {
 		database = helper.getWritableDatabase();
 	}
-
+	
 	public void close() {
 		helper.close();
 	}
@@ -44,7 +46,8 @@ public class BookDataSource {
 	}
 
 	private void addBook(Book book) {
-		Log.v(BookDataSource.class.toString(), "adding book: "+ book.toString());
+		Log.v(BookDataSource.class.toString(),
+				"adding book: " + book.toString());
 		ContentValues values = new ContentValues();
 		values.put(TITLE_COLUMN_NAME, book.getTitle());
 		values.put(RENEWALS_COLUMN_NAME, book.getRenewals());
@@ -53,7 +56,7 @@ public class BookDataSource {
 	}
 
 	public void deleteBooks() {
-		database.execSQL("delete * from " + BOOK_TABLE_NAME);
+		database.delete(BOOK_TABLE_NAME, null, null);
 	}
 
 	/** Returns a cursor of a select all statement */
@@ -78,7 +81,7 @@ public class BookDataSource {
 		return books;
 	}
 
-	private static Book cursorToBook(Cursor cursor) {
+	public static Book cursorToBook(Cursor cursor) {
 		String title = cursor.getString(cursor
 				.getColumnIndex(TITLE_COLUMN_NAME));
 		int renewals = cursor.getInt(cursor
