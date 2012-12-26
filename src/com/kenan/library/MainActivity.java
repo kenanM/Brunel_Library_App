@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		// new DownloadClosingTimes(closingTimes).execute();
+		new DownloadClosingTimes(closingTimes).execute();
 		startService(new Intent(this, DownloadBookDetails.class));
 	}
 

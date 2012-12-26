@@ -1,11 +1,7 @@
 package com.kenan.library;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,9 +36,9 @@ public class DownloadBookDetails extends Service {
 		String bookDetailsPage;
 		if (MainActivity.DEBUG) {
 			Log.v(TAG, "Loading from file...");
-			bookDetailsPage = loadBookDetailsFromFile();
+			bookDetailsPage = loadBookDetailsPageFromFile();
 		} else {
-			bookDetailsPage = downloadBookDetails();
+			bookDetailsPage = downloadBookDetailsPage();
 		}
 
 		List<Book> books = parse(bookDetailsPage);
@@ -90,7 +86,7 @@ public class DownloadBookDetails extends Service {
 	}
 
 	// TODO remove from release build.
-	private String loadBookDetailsFromFile() {
+	private String loadBookDetailsPageFromFile() {
 		BufferedReader br;
 		StringBuilder sb = new StringBuilder();
 
@@ -110,26 +106,25 @@ public class DownloadBookDetails extends Service {
 		return sb.toString();
 	}
 
-	private String downloadBookDetails() {
+	private String downloadBookDetailsPage() {
 		String result = "";
 		try {
 
-			// Download the main website library.brunel.ac.urk
+			// Download the homepage library.brunel.ac.uk
 			HttpGet get = new HttpGet(BASE_URL);
 			HttpResponse response = httpClient.execute(get);
 
-			// Find the redirect url (doesn't use a normal 302)
+			// Find and follow the redirect URL
 			String html = EntityUtils.toString(response.getEntity());
 			Document doc = Jsoup.parse(html);
 			Elements metaTags = doc.select("META");
 			String nextLink = metaTags.first().attr("content");
 			nextLink = nextLink.substring(nextLink.indexOf("URL=") + 4);
-			Log.v(TAG, "Getting: " + BASE_URL + nextLink);
 			get = new HttpGet(BASE_URL + nextLink);
 			response = httpClient.execute(get);
 			html = EntityUtils.toString(response.getEntity());
 
-			// Login
+			// Find and submit to the login form's POST URL
 			String postURL = findPostURL(html);
 			HttpPost post = new HttpPost(postURL);
 			// TODO: Move away from hard coding user_id
@@ -138,19 +133,22 @@ public class DownloadBookDetails extends Service {
 			response = httpClient.execute(post);
 			html = EntityUtils.toString(response.getEntity());
 
+			// Click on My Account
 			nextLink = findLinkCalled("My Account", html);
 			get = new HttpGet(nextLink);
 			response = httpClient.execute(get);
 			html = EntityUtils.toString(response.getEntity());
 
+			//Click on Renew My Materials
 			nextLink = findLinkCalled("Renew My Materials", html);
 			get = new HttpGet(nextLink);
 			response = httpClient.execute(get);
 			html = EntityUtils.toString(response.getEntity());
 
-			Log.v(TAG, html);
+			//Return the page listing all you books
 			return html;
 
+		//TODO Handle error exceptions better
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -180,31 +178,8 @@ public class DownloadBookDetails extends Service {
 		return "Error";
 	}
 
-	public void appendLog(String text) {
-		File logFile = new File("sdcard/log.file");
-		if (!logFile.exists()) {
-			try {
-				logFile.createNewFile();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		try {
-			// BufferedWriter for performance, true to set append to file flag
-			BufferedWriter buf = new BufferedWriter(new FileWriter(logFile,
-					true));
-			buf.append(text);
-			buf.newLine();
-			buf.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	@Override
 	public IBinder onBind(Intent intent) {
 		throw new UnsupportedOperationException();
 	}
-
 }

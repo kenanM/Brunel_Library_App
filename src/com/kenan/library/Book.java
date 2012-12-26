@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class Book implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private String title, dueDate; 
+	private String title, dueDate;
 	private int renewals;
 
 	public Book(String title, String dueDate, int renewals) {
@@ -24,12 +24,6 @@ public class Book implements Serializable {
 
 	public int getRenewals() {
 		return renewals;
-	}
-
-	public String toJson() {
-		return String.format(
-				"{\"title\":\"&s\", \"date\":\"&s\",\"renewals\":\"s\"}",
-				title, dueDate, renewals);
 	}
 
 	public String toString() {

@@ -18,6 +18,7 @@ import android.widget.TextView;
  * Sets a textView (given as parameter) to display the opening times for Brunel
  * library
  */
+//TODO switch to using a service and away from AsyncTask
 public class DownloadClosingTimes extends AsyncTask<Void, Void, String> {
 
 	public static final String CLOSING_TIMES_URL = "http://www.brunel.ac.uk/services/library";
@@ -33,7 +34,8 @@ public class DownloadClosingTimes extends AsyncTask<Void, Void, String> {
 	 * Downloads html from the brunel library webpage containing the closing
 	 * times
 	 */
-	private String download() {
+	//TODO switch to using httpClient
+	private String downloadClosingTimes() {
 		InputStream is = null;
 		String html = "";
 		try {
@@ -61,22 +63,24 @@ public class DownloadClosingTimes extends AsyncTask<Void, Void, String> {
 	}
 
 	/** Extracts out the Opening-times */
-	private String parseText(String html) {
+	private String getClosingTimes(String html) {
 		Document doc = Jsoup.parse(html);
 		Element element = doc.getElementById("opening-hours");
 		if (element == null)
+			// TODO handle this error condition better
 			return "";
-		return "Opening-times: \n" + element.text();
+		return element.text();
 	}
 
 	@Override
 	protected String doInBackground(Void... params) {
-		return "";//parseText(download());
+		return getClosingTimes(downloadClosingTimes());
 	}
 
 	@Override
 	protected void onPostExecute(String result) {
 		if (result.equals("")) {
+			// TODO handle this error condition better
 			text.setText("Unable to download opening-times");
 		} else {
 			text.setText(result);

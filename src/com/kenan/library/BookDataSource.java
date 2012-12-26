@@ -6,16 +6,13 @@ import static com.kenan.library.BookDatabaseHelper.ID_COLUMN_NAME;
 import static com.kenan.library.BookDatabaseHelper.RENEWALS_COLUMN_NAME;
 import static com.kenan.library.BookDatabaseHelper.TITLE_COLUMN_NAME;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Handler;
 import android.util.Log;
 
 public class BookDataSource {
@@ -34,7 +31,7 @@ public class BookDataSource {
 	public void open() throws SQLException {
 		database = helper.getWritableDatabase();
 	}
-	
+
 	public void close() {
 		helper.close();
 	}
@@ -65,22 +62,7 @@ public class BookDataSource {
 				null, null);
 	}
 
-	public List<Book> getAllBooks() {
-		List<Book> books = new LinkedList<Book>();
-
-		Cursor cursor = getCursor();
-
-		cursor.moveToFirst();
-		while (!cursor.isAfterLast()) {
-			Book book = cursorToBook(cursor);
-			books.add(book);
-			cursor.moveToNext();
-		}
-
-		cursor.close();
-		return books;
-	}
-
+	/** Extract a Book object from a cursor pointing at a row in the book table */
 	public static Book cursorToBook(Cursor cursor) {
 		String title = cursor.getString(cursor
 				.getColumnIndex(TITLE_COLUMN_NAME));
