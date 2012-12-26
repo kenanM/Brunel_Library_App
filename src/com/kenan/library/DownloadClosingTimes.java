@@ -1,11 +1,13 @@
 package com.kenan.library;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,52 +20,32 @@ import android.widget.TextView;
  * Sets a textView (given as parameter) to display the opening times for Brunel
  * library
  */
-//TODO switch to using a service and away from AsyncTask
+// TODO switch to using a service and away from AsyncTask
 public class DownloadClosingTimes extends AsyncTask<Void, Void, String> {
 
-	public static final String CLOSING_TIMES_URL = "http://www.brunel.ac.uk/services/library";
-	private static final String TAG = "DownloadClosingTimes";
+	private static final String CLOSING_TIMES_URL = "http://www.brunel.ac.uk/services/library";
+	private static final String TAG = DownloadClosingTimes.class.toString();
 
 	TextView text;
+	HttpClient httpClient;
 
 	public DownloadClosingTimes(TextView text) {
 		this.text = text;
+		httpClient = new DefaultHttpClient();
 	}
 
 	/**
-	 * Downloads html from the brunel library webpage containing the closing
+	 * Downloads HTML from the brunel library web page containing the closing
 	 * times
 	 */
-	//TODO switch to using httpClient
-	private String downloadClosingTimes() {
-		InputStream is = null;
-		String html = "";
-		try {
-			URL url = new URL(CLOSING_TIMES_URL);
-			is = url.openStream();
-			DataInputStream dis = new DataInputStream(new BufferedInputStream(
-					is));
-
-			String line = "";
-			while ((line = dis.readLine()) != null) {
-				html += line;
-			}
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-		} finally {
-			try {
-				if (is != null) {
-					is.close();
-				}
-			} catch (IOException ioe) {
-				Log.v(TAG, "Unable to close inputStream");
-			}
-		}
-		return html;
+	private String downloadHomePage() throws ParseException, IOException {
+		HttpGet get = new HttpGet(CLOSING_TIMES_URL);
+		HttpResponse response = httpClient.execute(get);
+		return EntityUtils.toString(response.getEntity());
 	}
 
 	/** Extracts out the Opening-times */
-	private String getClosingTimes(String html) {
+	private String findClosingTimes(String html) {
 		Document doc = Jsoup.parse(html);
 		Element element = doc.getElementById("opening-hours");
 		if (element == null)
@@ -74,7 +56,17 @@ public class DownloadClosingTimes extends AsyncTask<Void, Void, String> {
 
 	@Override
 	protected String doInBackground(Void... params) {
-		return getClosingTimes(downloadClosingTimes());
+		String homePage;
+		try {
+			homePage = downloadHomePage();
+		} catch (IOException e) {
+			Log.e(TAG, "Network Exception!");
+			return "";
+		} catch (ParseException e) {
+			Log.e(TAG, "Parsing Exception");
+			return "";
+		}
+		return findClosingTimes(homePage);
 	}
 
 	@Override
