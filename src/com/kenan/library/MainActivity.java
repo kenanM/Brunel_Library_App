@@ -9,6 +9,9 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -21,6 +24,8 @@ public class MainActivity extends Activity {
 
 	TextView closingTimes;
 	ListView list;
+	Button refreshButton;
+
 	BookDataSource bookDataSource;
 	BookAdapter bookAdapter;
 
@@ -40,6 +45,12 @@ public class MainActivity extends Activity {
 		}
 	};
 
+	private OnClickListener refreshButtonListener = new OnClickListener() {
+		public void onClick(View v) {
+			launchDownloadBookService();
+		}
+	};
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -53,19 +64,19 @@ public class MainActivity extends Activity {
 
 		list = (ListView) findViewById(R.id.list);
 		closingTimes = (TextView) findViewById(R.id.closingTimes);
+		refreshButton = (Button) findViewById(R.id.refresh_button);
+		refreshButton.setOnClickListener(refreshButtonListener);
 
 		bookDataSource = new BookDataSource(this);
 		Cursor cursor = bookDataSource.getCursor();
 		bookAdapter = new BookAdapter(this, cursor);
 		list.setAdapter(bookAdapter);
-
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
 		startService(new Intent(this, DownloadClosingTimes.class));
-		startService(new Intent(this, DownloadBookDetails.class));
 	}
 
 	@Override
@@ -77,6 +88,10 @@ public class MainActivity extends Activity {
 	@Override
 	public void onStop() {
 		bookDataSource.close();
+	}
+
+	private void launchDownloadBookService() {
+		startService(new Intent(this, DownloadBookDetails.class));
 	}
 
 	private void refreshList() {

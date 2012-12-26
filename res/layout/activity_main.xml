@@ -23,4 +23,13 @@
 
     </ListView>
 
+    <Button
+        android:id="@+id/refresh_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/closingTimes"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:text="@string/refresh" />
+
 </RelativeLayout>

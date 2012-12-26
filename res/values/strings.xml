@@ -8,5 +8,6 @@
     <string name="title">Title</string>
     <string name="date_due">Date Due:</string>
     <string name="renewals">Renewals:</string>
+    <string name="refresh">Refresh</string>
         
 </resources>
