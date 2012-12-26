@@ -24,7 +24,7 @@ import android.util.Log;
 
 public class DownloadBookDetails extends Service {
 
-	public static final String UPDATED_BOOK_DATABASE_INTENT = "com.kenan.library.update";
+	public static final String UPDATED_BOOK_DATABASE_INTENT = "com.kenan.library.downloadbookdetails.update";
 	private static final String BASE_URL = "http://library.brunel.ac.uk";
 	private static final String TAG = "DownloadBookDetails";
 

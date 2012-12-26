@@ -24,10 +24,19 @@ public class MainActivity extends Activity {
 	BookDataSource bookDataSource;
 	BookAdapter bookAdapter;
 
-	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+	private BroadcastReceiver listViewUpdateReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			refreshList();
+		}
+	};
+
+	private BroadcastReceiver closingTimesUpdateReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String updatedTimes = intent.getExtras().getString(
+					DownloadClosingTimes.CLOSING_TIMES);
+			closingTimes.setText(updatedTimes);
 		}
 	};
 
@@ -36,8 +45,11 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		registerReceiver(broadcastReceiver, new IntentFilter(
+		registerReceiver(listViewUpdateReceiver, new IntentFilter(
 				DownloadBookDetails.UPDATED_BOOK_DATABASE_INTENT));
+
+		registerReceiver(closingTimesUpdateReceiver, new IntentFilter(
+				DownloadClosingTimes.UPDATED_CLOSING_TIMES_INTENT));
 
 		list = (ListView) findViewById(R.id.list);
 		closingTimes = (TextView) findViewById(R.id.closingTimes);
@@ -52,7 +64,7 @@ public class MainActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		new DownloadClosingTimes(closingTimes).execute();
+		startService(new Intent(this, DownloadClosingTimes.class));
 		startService(new Intent(this, DownloadBookDetails.class));
 	}
 

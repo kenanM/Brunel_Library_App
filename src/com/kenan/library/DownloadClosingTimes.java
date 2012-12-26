@@ -12,36 +12,58 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import android.os.AsyncTask;
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
 import android.util.Log;
-import android.widget.TextView;
 
 /**
  * Sets a textView (given as parameter) to display the opening times for Brunel
  * library
  */
 // TODO switch to using a service and away from AsyncTask
-public class DownloadClosingTimes extends AsyncTask<Void, Void, String> {
+public class DownloadClosingTimes extends Service {
 
 	private static final String CLOSING_TIMES_URL = "http://www.brunel.ac.uk/services/library";
 	private static final String TAG = DownloadClosingTimes.class.toString();
+	
+	public static final String UPDATED_CLOSING_TIMES_INTENT = "com.kenan.library.closingtimes.update";
+	public static final String CLOSING_TIMES = "closingTimes";
 
-	TextView text;
 	HttpClient httpClient;
 
-	public DownloadClosingTimes(TextView text) {
-		this.text = text;
+	@Override
+	public void onCreate() {
 		httpClient = new DefaultHttpClient();
 	}
 
-	/**
-	 * Downloads HTML from the brunel library web page containing the closing
-	 * times
-	 */
-	private String downloadHomePage() throws ParseException, IOException {
-		HttpGet get = new HttpGet(CLOSING_TIMES_URL);
-		HttpResponse response = httpClient.execute(get);
-		return EntityUtils.toString(response.getEntity());
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+
+		String homePage;
+		try {
+			HttpGet get = new HttpGet(CLOSING_TIMES_URL);
+			HttpResponse response = httpClient.execute(get);
+			homePage = EntityUtils.toString(response.getEntity());
+		} catch (IOException e) {
+			Log.e(TAG, "Network Exception!");
+			homePage = "";
+		} catch (ParseException e) {
+			Log.e(TAG, "Parsing Exception");
+			homePage = "";
+		}
+
+		String closingTimes = findClosingTimes(homePage);
+
+		// TODO place closing times as well as time of update in
+		// sharedPreference
+
+		Intent broadcastIntent = new Intent(UPDATED_CLOSING_TIMES_INTENT);
+		broadcastIntent.putExtra(CLOSING_TIMES, closingTimes);
+		sendBroadcast(broadcastIntent);
+
+		// Stop the service
+		return START_NOT_STICKY;
 	}
 
 	/** Extracts out the Opening-times */
@@ -55,27 +77,7 @@ public class DownloadClosingTimes extends AsyncTask<Void, Void, String> {
 	}
 
 	@Override
-	protected String doInBackground(Void... params) {
-		String homePage;
-		try {
-			homePage = downloadHomePage();
-		} catch (IOException e) {
-			Log.e(TAG, "Network Exception!");
-			return "";
-		} catch (ParseException e) {
-			Log.e(TAG, "Parsing Exception");
-			return "";
-		}
-		return findClosingTimes(homePage);
-	}
-
-	@Override
-	protected void onPostExecute(String result) {
-		if (result.equals("")) {
-			// TODO handle this error condition better
-			text.setText("Unable to download opening-times");
-		} else {
-			text.setText(result);
-		}
+	public IBinder onBind(Intent intent) {
+		throw new UnsupportedOperationException();
 	}
 }
