@@ -1,5 +1,6 @@
 package com.kenan.library;
 
+import static com.kenan.library.DownloadClosingTimes.OPENING_TIMES_KEY;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,11 +19,10 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
 
 	private static final String TAG = MainActivity.class.toString();
-
 	// TODO Remove
 	public static final boolean DEBUG = true;
 
-	TextView closingTimes;
+	TextView openingTimes;
 	ListView list;
 	Button refreshButton;
 
@@ -36,12 +36,10 @@ public class MainActivity extends Activity {
 		}
 	};
 
-	private BroadcastReceiver closingTimesUpdateReceiver = new BroadcastReceiver() {
+	private BroadcastReceiver openingTimesUpdateReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			String updatedTimes = intent.getExtras().getString(
-					DownloadClosingTimes.CLOSING_TIMES);
-			closingTimes.setText(updatedTimes);
+			setOpeningTimes(intent.getExtras().getString(OPENING_TIMES_KEY));
 		}
 	};
 
@@ -59,11 +57,11 @@ public class MainActivity extends Activity {
 		registerReceiver(listViewUpdateReceiver, new IntentFilter(
 				DownloadBookDetails.UPDATED_BOOK_DATABASE_INTENT));
 
-		registerReceiver(closingTimesUpdateReceiver, new IntentFilter(
-				DownloadClosingTimes.UPDATED_CLOSING_TIMES_INTENT));
+		registerReceiver(openingTimesUpdateReceiver, new IntentFilter(
+				DownloadClosingTimes.UPDATE_OPENING_TIMES_INTENT));
 
 		list = (ListView) findViewById(R.id.list);
-		closingTimes = (TextView) findViewById(R.id.closingTimes);
+		openingTimes = (TextView) findViewById(R.id.closingTimes);
 		refreshButton = (Button) findViewById(R.id.refresh_button);
 		refreshButton.setOnClickListener(refreshButtonListener);
 
@@ -87,7 +85,12 @@ public class MainActivity extends Activity {
 
 	@Override
 	public void onStop() {
+		super.onStop();
 		bookDataSource.close();
+	}
+
+	private void setOpeningTimes(String newOpeningTimes) {
+		openingTimes.setText(newOpeningTimes);
 	}
 
 	private void launchDownloadBookService() {

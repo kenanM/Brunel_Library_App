@@ -1,6 +1,6 @@
 package com.kenan.library;
 
-import java.io.IOException;
+import java.util.Calendar;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
@@ -21,58 +21,77 @@ import android.util.Log;
  * Sets a textView (given as parameter) to display the opening times for Brunel
  * library
  */
-// TODO switch to using a service and away from AsyncTask
 public class DownloadClosingTimes extends Service {
 
-	private static final String CLOSING_TIMES_URL = "http://www.brunel.ac.uk/services/library";
+	private static final String HOME_PAGE_URL = "http://www.brunel.ac.uk/services/library";
 	private static final String TAG = DownloadClosingTimes.class.toString();
-	
-	public static final String UPDATED_CLOSING_TIMES_INTENT = "com.kenan.library.closingtimes.update";
-	public static final String CLOSING_TIMES = "closingTimes";
+	public static final String UPDATE_OPENING_TIMES_INTENT = "com.kenan.library.closingtimes.update";
+	public static final String OPENING_TIMES_KEY = "closing times";
 
-	HttpClient httpClient;
+	String openingTimes;
+	LocalStorage localStorage;
+	int today;
 
 	@Override
 	public void onCreate() {
-		httpClient = new DefaultHttpClient();
+		localStorage = new LocalStorage(this);
 	}
 
+	/**
+	 * Decide whether to get closingTimes from the Internet or from shared
+	 * preferences
+	 */
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 
-		String homePage;
-		try {
-			HttpGet get = new HttpGet(CLOSING_TIMES_URL);
-			HttpResponse response = httpClient.execute(get);
-			homePage = EntityUtils.toString(response.getEntity());
-		} catch (IOException e) {
-			Log.e(TAG, "Network Exception!");
-			homePage = "";
-		} catch (ParseException e) {
-			Log.e(TAG, "Parsing Exception");
-			homePage = "";
+		String openingTimes = localStorage.getOpeningTimes();
+		int dayOfLastUpdate = localStorage.getDayOfOpeningTimesUpdate();
+		today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
+
+		if (dayOfLastUpdate != today || openingTimes.equals("")) {
+			Log.v(TAG, "Downloading opening times");
+			broadcast(getString(R.string.gettingOpeningTimes));
+			downloadOpeningTimes();
 		}
 
-		String closingTimes = findClosingTimes(homePage);
+		openingTimes = localStorage.getOpeningTimes();
 
-		// TODO place closing times as well as time of update in
-		// sharedPreference
-
-		Intent broadcastIntent = new Intent(UPDATED_CLOSING_TIMES_INTENT);
-		broadcastIntent.putExtra(CLOSING_TIMES, closingTimes);
-		sendBroadcast(broadcastIntent);
+		if (openingTimes.equals("")) {
+			broadcast(getString(R.string.closing_times_error));
+		} else {
+			broadcast(openingTimes);
+		}
 
 		// Stop the service
 		return START_NOT_STICKY;
 	}
 
+	private void broadcast(String message) {
+		Intent broadcastIntent = new Intent(UPDATE_OPENING_TIMES_INTENT);
+		broadcastIntent.putExtra(OPENING_TIMES_KEY, message);
+		sendBroadcast(broadcastIntent);
+	}
+
+	private void downloadOpeningTimes() {
+		HttpClient httpClient = new DefaultHttpClient();
+		HttpGet get = new HttpGet(HOME_PAGE_URL);
+		try {
+			HttpResponse response = httpClient.execute(get);
+			String homePage = EntityUtils.toString(response.getEntity());
+			openingTimes = parseHomePage(homePage);
+		} catch (Exception e) {
+			Log.e(TAG, e.toString());
+			openingTimes = "";
+		}
+		localStorage.updateOpeningTimes(openingTimes);
+	}
+
 	/** Extracts out the Opening-times */
-	private String findClosingTimes(String html) {
-		Document doc = Jsoup.parse(html);
+	private String parseHomePage(String homePage) throws ParseException {
+		Document doc = Jsoup.parse(homePage);
 		Element element = doc.getElementById("opening-hours");
 		if (element == null)
-			// TODO handle this error condition better
-			return "";
+			throw new ParseException();
 		return element.text();
 	}
 
