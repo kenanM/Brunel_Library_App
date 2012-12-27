@@ -46,6 +46,9 @@ public class DownloadBookDetails extends Service {
 		BookDataSource dataSource = new BookDataSource(this);
 		dataSource.deleteBooks();
 		dataSource.addBooks(books);
+		dataSource.close();
+		new LocalStorage(this).updateLastRefreshDate();
+
 		sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
 
 		// Stop the service
@@ -139,16 +142,16 @@ public class DownloadBookDetails extends Service {
 			response = httpClient.execute(get);
 			html = EntityUtils.toString(response.getEntity());
 
-			//Click on Renew My Materials
+			// Click on Renew My Materials
 			nextLink = findLinkCalled("Renew My Materials", html);
 			get = new HttpGet(nextLink);
 			response = httpClient.execute(get);
 			html = EntityUtils.toString(response.getEntity());
 
-			//Return the page listing all you books
+			// Return the page listing all you books
 			return html;
 
-		//TODO Handle error exceptions better
+			// TODO Handle error exceptions better
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

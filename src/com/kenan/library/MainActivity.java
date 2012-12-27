@@ -25,9 +25,11 @@ public class MainActivity extends Activity {
 	TextView openingTimes;
 	ListView list;
 	Button refreshButton;
+	TextView lastRefresh;
 
 	BookDataSource bookDataSource;
 	BookAdapter bookAdapter;
+	LocalStorage localStorage;
 
 	private BroadcastReceiver listViewUpdateReceiver = new BroadcastReceiver() {
 		@Override
@@ -54,6 +56,8 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		localStorage = new LocalStorage(this);
+
 		registerReceiver(listViewUpdateReceiver, new IntentFilter(
 				DownloadBookDetails.UPDATED_BOOK_DATABASE_INTENT));
 
@@ -64,6 +68,7 @@ public class MainActivity extends Activity {
 		openingTimes = (TextView) findViewById(R.id.closingTimes);
 		refreshButton = (Button) findViewById(R.id.refresh_button);
 		refreshButton.setOnClickListener(refreshButtonListener);
+		lastRefresh = (TextView) findViewById(R.id.last_refresh);
 
 		bookDataSource = new BookDataSource(this);
 		Cursor cursor = bookDataSource.getCursor();
@@ -74,6 +79,7 @@ public class MainActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
+		lastRefresh.setText(localStorage.getLastRefreshDate());
 		startService(new Intent(this, DownloadClosingTimes.class));
 	}
 
@@ -100,5 +106,6 @@ public class MainActivity extends Activity {
 	private void refreshList() {
 		Log.v(TAG, "refreshing list");
 		bookAdapter.changeCursor(bookDataSource.getCursor());
+		lastRefresh.setText(localStorage.getLastRefreshDate());
 	}
 }

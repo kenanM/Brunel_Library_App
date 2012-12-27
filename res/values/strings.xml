@@ -10,5 +10,5 @@
     <string name="renewals">Renewals:</string>
     <string name="refresh">Refresh</string>
     <string name="closing_times_error">Error getting closing times</string>
-        
+    <string name="press_refresh_to_see_your_books">Press refresh to see your books.</string>
 </resources>
