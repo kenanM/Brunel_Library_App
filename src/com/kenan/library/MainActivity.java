@@ -27,7 +27,6 @@ public class MainActivity extends Activity {
 	Button refreshButton;
 	TextView lastRefresh;
 
-	BookDataSource bookDataSource;
 	BookAdapter bookAdapter;
 	LocalStorage localStorage;
 
@@ -70,10 +69,11 @@ public class MainActivity extends Activity {
 		refreshButton.setOnClickListener(refreshButtonListener);
 		lastRefresh = (TextView) findViewById(R.id.last_refresh);
 
-		bookDataSource = new BookDataSource(this);
+		BookDataSource bookDataSource = new BookDataSource(this);
 		Cursor cursor = bookDataSource.getCursor();
 		bookAdapter = new BookAdapter(this, cursor);
 		list.setAdapter(bookAdapter);
+		bookDataSource.close();
 	}
 
 	@Override
@@ -89,12 +89,6 @@ public class MainActivity extends Activity {
 		return true;
 	}
 
-	@Override
-	public void onStop() {
-		super.onStop();
-		bookDataSource.close();
-	}
-
 	private void setOpeningTimes(String newOpeningTimes) {
 		openingTimes.setText(newOpeningTimes);
 	}
@@ -105,7 +99,9 @@ public class MainActivity extends Activity {
 
 	private void refreshList() {
 		Log.v(TAG, "refreshing list");
+		BookDataSource bookDataSource = new BookDataSource(this);
 		bookAdapter.changeCursor(bookDataSource.getCursor());
+		bookDataSource.close();
 		lastRefresh.setText(localStorage.getLastRefreshDate());
 	}
 }
