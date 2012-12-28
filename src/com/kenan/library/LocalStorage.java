@@ -25,18 +25,20 @@ public class LocalStorage {
 
 	public LocalStorage(Context context) {
 		this.context = context;
-		preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		editor = preferences.edit();
 	}
 
 	public void updateOpeningTimes(String openingTimes) {
 		int today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
+		preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		editor = preferences.edit();
 		editor.putInt(OpeningTimes.DAY_OF_UPDATE, today);
 		editor.putString(OpeningTimes.VALUE, openingTimes);
 		editor.commit();
 	}
 
 	public String getOpeningTimes() {
+		preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		editor = preferences.edit();
 		return preferences.getString(OpeningTimes.VALUE, "");
 	}
 
@@ -48,11 +50,15 @@ public class LocalStorage {
 		Calendar today = Calendar.getInstance();
 		DateFormat formatter = DateFormat.getDateTimeInstance();
 		String time = formatter.format(today.getTime());
+		preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		editor = preferences.edit();
 		editor.putString(BookDetails.DATE_OF_REFRESH, time);
 		editor.commit();
 	}
 
 	public String getLastRefreshDate() {
+		preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		editor = preferences.edit();
 		return preferences.getString(BookDetails.DATE_OF_REFRESH,
 				context.getString(R.string.press_refresh_to_see_your_books));
 	}
