@@ -56,7 +56,7 @@ public class LocalStorage {
 		editor.commit();
 	}
 
-	public String getLastRefreshDate() {
+	public String getRefreshDate() {
 		preferences = PreferenceManager.getDefaultSharedPreferences(context);
 		editor = preferences.edit();
 		return preferences.getString(BookDetails.DATE_OF_REFRESH,

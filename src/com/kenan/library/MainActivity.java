@@ -79,7 +79,7 @@ public class MainActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		lastRefresh.setText(localStorage.getLastRefreshDate());
+		lastRefresh.setText(localStorage.getRefreshDate());
 		startService(new Intent(this, DownloadClosingTimes.class));
 	}
 
@@ -102,6 +102,6 @@ public class MainActivity extends Activity {
 		BookDataSource bookDataSource = new BookDataSource(this);
 		bookAdapter.changeCursor(bookDataSource.getCursor());
 		bookDataSource.close();
-		lastRefresh.setText(localStorage.getLastRefreshDate());
+		lastRefresh.setText(localStorage.getRefreshDate());
 	}
 }
