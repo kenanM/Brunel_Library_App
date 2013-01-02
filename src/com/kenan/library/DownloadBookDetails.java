@@ -28,6 +28,12 @@ public class DownloadBookDetails extends Service {
 	private static final String BASE_URL = "http://library.brunel.ac.uk";
 	private static final String TAG = "DownloadBookDetails";
 
+	public static final class Operation {
+		public static final String KEY = "key";
+		public static final String REFRESH_BOOK_LIST = "refresh_list";
+		public static final String RENEW_BOOKS = "renew_books";
+	}
+
 	private HttpClient httpClient = new DefaultHttpClient();
 
 	@Override
@@ -50,6 +56,11 @@ public class DownloadBookDetails extends Service {
 		new LocalStorage(this).updateLastRefreshDate();
 
 		sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
+
+		String operation = intent.getExtras().getString(Operation.KEY);
+		if (operation.equals(Operation.RENEW_BOOKS)) {
+			// TODO code to renew books here
+		}
 
 		// Stop the service
 		return START_NOT_STICKY;

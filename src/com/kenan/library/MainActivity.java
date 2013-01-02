@@ -1,6 +1,9 @@
 package com.kenan.library;
 
 import static com.kenan.library.DownloadClosingTimes.OPENING_TIMES_KEY;
+
+import com.kenan.library.DownloadBookDetails.Operation;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -46,7 +49,7 @@ public class MainActivity extends Activity {
 
 	private OnClickListener refreshButtonListener = new OnClickListener() {
 		public void onClick(View v) {
-			launchDownloadBookService();
+			updateBookDatabase();
 		}
 	};
 
@@ -93,8 +96,16 @@ public class MainActivity extends Activity {
 		openingTimes.setText(newOpeningTimes);
 	}
 
-	private void launchDownloadBookService() {
-		startService(new Intent(this, DownloadBookDetails.class));
+	private void updateBookDatabase() {
+		Intent intent = new Intent(this, DownloadBookDetails.class);
+		intent.putExtra(Operation.KEY, Operation.REFRESH_BOOK_LIST);
+		startService(intent);
+	}
+
+	private void renewBooks() {
+		Intent intent = new Intent(this, DownloadBookDetails.class);
+		intent.putExtra(Operation.KEY, Operation.RENEW_BOOKS);
+		startService(intent);
 	}
 
 	private void refreshList() {
