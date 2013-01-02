@@ -2,10 +2,12 @@ package com.kenan.library;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -49,21 +51,31 @@ public class LibraryBookService extends Service {
 
 		List<Book> books = parse(bookDetailsPage);
 
+		updateBookDatabase(books);
+		sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
+
+		String operation = intent.getExtras().getString(Operation.KEY);
+		if (operation.equals(Operation.RENEW_BOOKS)) {
+			try {
+				books = renewBooks(bookDetailsPage);
+				updateBookDatabase(books);
+				sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
+			} catch (IOException e) {
+				// TODO handle error conditions
+				e.printStackTrace();
+			}
+		}
+
+		// Stop the service
+		return START_NOT_STICKY;
+	}
+
+	private void updateBookDatabase(List<Book> books) {
 		BookDataSource dataSource = new BookDataSource(this);
 		dataSource.deleteBooks();
 		dataSource.addBooks(books);
 		dataSource.close();
 		new LocalStorage(this).updateLastRefreshDate();
-
-		sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
-
-		String operation = intent.getExtras().getString(Operation.KEY);
-		if (operation.equals(Operation.RENEW_BOOKS)) {
-			// TODO code to renew books here
-		}
-
-		// Stop the service
-		return START_NOT_STICKY;
 	}
 
 	private List<Book> parse(String html) {
@@ -76,6 +88,9 @@ public class LibraryBookService extends Service {
 		Elements labels = doc.getElementsByAttributeValueMatching("for",
 				"RENEW\\d");
 		Log.v(TAG, "found " + labels.size() + " books");
+		if (labels.size() == 0) {
+			return new LinkedList<Book>();
+		}
 
 		Elements strongTags = doc.getElementsByTag("strong");
 		int itemsEligibleForRenewal = Integer.parseInt(strongTags.remove(0)
@@ -139,7 +154,7 @@ public class LibraryBookService extends Service {
 			html = EntityUtils.toString(response.getEntity());
 
 			// Find and submit to the login form's POST URL
-			String postURL = findPostURL(html);
+			String postURL = findPostURL(html, "new_session");
 			HttpPost post = new HttpPost(postURL);
 			// TODO: Move away from hard coding user_id
 			String data = "user_id=68566027&password=";
@@ -169,10 +184,10 @@ public class LibraryBookService extends Service {
 		return result;
 	}
 
-	private String findPostURL(String html) {
+	private String findPostURL(String html, String formName){
 		Log.v(TAG, "finding post URL");
 		Document doc = Jsoup.parse(html);
-		Element form = doc.select("form[method=post]").first();
+		Element form = doc.select("form[name="+formName+"]").first();
 		String postURL = BASE_URL + form.attr("action");
 		Log.v(TAG, "postURL:" + postURL);
 		return postURL;
@@ -190,6 +205,42 @@ public class LibraryBookService extends Service {
 		} // TODO handle error conditions
 		Log.e(TAG, "Error: unable to find a link called " + name);
 		return "Error";
+	}
+
+	private List<Book> renewBooks(String bookDetailsPage) throws IOException {
+		String postURL = findPostURL(bookDetailsPage, "renewitems");
+		HttpPost post = new HttpPost(postURL);
+		// TODO move away from hardcoded user_id
+		String data = "user_id=68566027&selection_type=all";
+		post.setEntity(new StringEntity(data));
+		HttpResponse response = httpClient.execute(post);
+		return parseRenewedBooksPage(EntityUtils.toString(response.getEntity()));
+	}
+
+	private List<Book> parseRenewedBooksPage(String renewedBooksPage) {
+		Document doc = Jsoup.parse(renewedBooksPage);
+		Elements listOfDDTags = doc.getElementsByTag("dd");
+		/*
+		 * Example DD tag<dd> Data structures and algorithms in Java<br/>
+		 * Goodrich, Michael T.<br/> QA76.73.J38G66 2004<br/>
+		 * 
+		 * Due: <strong>9/1/2013,23:59</strong><br/> Date renewed:
+		 * <strong>2/1/2013,14:40</strong><br/> Times renewed:
+		 * <strong>21</strong><br/> Renewals remaining:
+		 * <strong>UNLIMITED</strong><br/> </dd>
+		 */
+
+		List<Book> books = new LinkedList<Book>();
+		for (Element element : listOfDDTags) {
+			// TODO look into TextNodes
+			String title = element.text();
+			Elements strongTags = element.getElementsByTag("strong");
+			String dueDate = strongTags.get(0).text();
+			int timesRenewed = Integer.parseInt(strongTags.get(2).text());
+			books.add(new Book(title, dueDate, timesRenewed));
+		}
+
+		return books;
 	}
 
 	@Override

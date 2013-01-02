@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
 
 	private static final String TAG = MainActivity.class.toString();
 	// TODO Remove
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 
 	TextView openingTimes;
 	ListView list;
