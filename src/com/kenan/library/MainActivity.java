@@ -28,6 +28,7 @@ public class MainActivity extends Activity {
 	TextView openingTimes;
 	ListView list;
 	Button refreshButton;
+	Button renewButton;
 	TextView lastRefresh;
 
 	BookAdapter bookAdapter;
@@ -53,6 +54,12 @@ public class MainActivity extends Activity {
 		}
 	};
 
+	private OnClickListener renewButtonListener = new OnClickListener() {
+		public void onClick(View v) {
+			renewBooks();
+		}
+	};
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -70,6 +77,8 @@ public class MainActivity extends Activity {
 		openingTimes = (TextView) findViewById(R.id.closingTimes);
 		refreshButton = (Button) findViewById(R.id.refresh_button);
 		refreshButton.setOnClickListener(refreshButtonListener);
+		renewButton = (Button) findViewById(R.id.renew_button);
+		renewButton.setOnClickListener(renewButtonListener);
 		lastRefresh = (TextView) findViewById(R.id.last_refresh);
 
 		BookDataSource bookDataSource = new BookDataSource(this);

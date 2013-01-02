@@ -8,7 +8,8 @@
     <ListView
         android:id="@+id/list"
         android:layout_width="fill_parent"
-        android:layout_height="390dp" >
+        android:layout_height="304dp"
+        android:layout_weight="1.20" >
     </ListView>
 
     <TextView
@@ -22,6 +23,12 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/refresh" />
+
+    <Button
+        android:id="@+id/renew_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/renew_all_books" />
 
     <TextView
         android:id="@+id/closingTimes"
