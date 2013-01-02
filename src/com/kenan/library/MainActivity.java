@@ -2,7 +2,7 @@ package com.kenan.library;
 
 import static com.kenan.library.DownloadClosingTimes.OPENING_TIMES_KEY;
 
-import com.kenan.library.DownloadBookDetails.Operation;
+import com.kenan.library.LibraryBookService.Operation;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
 		localStorage = new LocalStorage(this);
 
 		registerReceiver(listViewUpdateReceiver, new IntentFilter(
-				DownloadBookDetails.UPDATED_BOOK_DATABASE_INTENT));
+				LibraryBookService.UPDATED_BOOK_DATABASE_INTENT));
 
 		registerReceiver(openingTimesUpdateReceiver, new IntentFilter(
 				DownloadClosingTimes.UPDATE_OPENING_TIMES_INTENT));
@@ -97,13 +97,13 @@ public class MainActivity extends Activity {
 	}
 
 	private void updateBookDatabase() {
-		Intent intent = new Intent(this, DownloadBookDetails.class);
+		Intent intent = new Intent(this, LibraryBookService.class);
 		intent.putExtra(Operation.KEY, Operation.REFRESH_BOOK_LIST);
 		startService(intent);
 	}
 
 	private void renewBooks() {
-		Intent intent = new Intent(this, DownloadBookDetails.class);
+		Intent intent = new Intent(this, LibraryBookService.class);
 		intent.putExtra(Operation.KEY, Operation.RENEW_BOOKS);
 		startService(intent);
 	}
