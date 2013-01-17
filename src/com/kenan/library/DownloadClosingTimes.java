@@ -1,5 +1,6 @@
 package com.kenan.library;
 
+import java.io.IOException;
 import java.util.Calendar;
 
 import org.apache.http.HttpResponse;
@@ -16,6 +17,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+import static com.kenan.library.MainActivity.*;
 
 /**
  * Sets a textView (given as parameter) to display the opening times for Brunel
@@ -51,7 +53,13 @@ public class DownloadClosingTimes extends Service {
 		if (dayOfLastUpdate != today || openingTimes.equals("")) {
 			Log.v(TAG, "Downloading opening times");
 			broadcast(getString(R.string.gettingOpeningTimes));
-			downloadOpeningTimes();
+			try {
+				downloadOpeningTimes();
+			} catch (IOException e) {
+				sendBroadcast(new Intent(CONNECTION_ERROR_BROADCAST));
+			} catch (ParseException e) {
+				sendBroadcast(new Intent(PARSE_ERROR_BROADCAST));
+			}
 		}
 
 		openingTimes = localStorage.getOpeningTimes();
@@ -72,17 +80,13 @@ public class DownloadClosingTimes extends Service {
 		sendBroadcast(broadcastIntent);
 	}
 
-	private void downloadOpeningTimes() {
+	private void downloadOpeningTimes() throws IOException {
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpGet get = new HttpGet(HOME_PAGE_URL);
-		try {
-			HttpResponse response = httpClient.execute(get);
-			String homePage = EntityUtils.toString(response.getEntity());
-			openingTimes = parseHomePage(homePage);
-		} catch (Exception e) {
-			Log.e(TAG, e.toString());
-			openingTimes = "";
-		}
+		HttpResponse response = httpClient.execute(get);
+		String homePage = EntityUtils.toString(response.getEntity());
+		openingTimes = parseHomePage(homePage);
+
 		localStorage.updateOpeningTimes(openingTimes);
 	}
 

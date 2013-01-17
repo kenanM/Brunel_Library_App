@@ -1,12 +1,12 @@
 package com.kenan.library;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.security.InvalidParameterException;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -22,10 +22,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+import static com.kenan.library.MainActivity.*;
 
 public class LibraryBookService extends Service {
 
 	public static final String UPDATED_BOOK_DATABASE_INTENT = "com.kenan.library.downloadbookdetails.update";
+
 	private static final String BASE_URL = "http://library.brunel.ac.uk";
 	private static final String TAG = "DownloadBookDetails";
 
@@ -40,29 +42,26 @@ public class LibraryBookService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 
-		String bookDetailsPage;
-		if (MainActivity.DEBUG) {
-			Log.v(TAG, "Loading from file...");
-			bookDetailsPage = loadBookDetailsPageFromFile();
-		} else {
-			bookDetailsPage = downloadBookDetailsPage();
-		}
+		try {
+			String bookDetailsPage = downloadBookDetailsPage();
+			List<Book> books = parse(bookDetailsPage);
 
-		List<Book> books = parse(bookDetailsPage);
+			updateBookDatabase(books);
+			sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
 
-		updateBookDatabase(books);
-		sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
-
-		String operation = intent.getExtras().getString(Operation.KEY);
-		if (operation.equals(Operation.RENEW_BOOKS)) {
-			try {
+			String operation = intent.getExtras().getString(Operation.KEY);
+			if (operation.equals(Operation.RENEW_BOOKS)) {
 				books = renewBooks(bookDetailsPage);
 				updateBookDatabase(books);
 				sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
-			} catch (IOException e) {
-				// TODO handle error conditions
-				e.printStackTrace();
 			}
+
+		} catch (InvalidParameterException e) {
+			sendBroadcast(new Intent(LOGIN_ERROR_BROADCAST));
+		} catch (NullPointerException e) {
+			sendBroadcast(new Intent(PARSE_ERROR_BROADCAST));
+		} catch (IOException e) {
+			sendBroadcast(new Intent(CONNECTION_ERROR_BROADCAST));
 		}
 
 		// Stop the service
@@ -77,7 +76,7 @@ public class LibraryBookService extends Service {
 		new LocalStorage(this).updateLastRefreshDate();
 	}
 
-	private List<Book> parse(String html) {
+	private List<Book> parse(String html) throws ParseException {
 		Log.v(TAG, "parsing...");
 
 		Document doc = Jsoup.parse(html);
@@ -97,6 +96,7 @@ public class LibraryBookService extends Service {
 
 		if (labels.size() != itemsEligibleForRenewal) {
 			Log.e(TAG, "Parsing disreprenceny!");
+			throw new ParseException();
 		}
 
 		List<Book> books = new LinkedList<Book>();
@@ -113,80 +113,53 @@ public class LibraryBookService extends Service {
 		return books;
 	}
 
-	// TODO remove from release build.
-	private String loadBookDetailsPageFromFile() {
-		BufferedReader br;
-		StringBuilder sb = new StringBuilder();
+	private String downloadBookDetailsPage() throws ParseException,
+			IOException, InvalidParameterException {
 
-		try {
-			br = new BufferedReader(new FileReader("sdcard/temp.html"));
-			String line = br.readLine();
+		// Download the homepage library.brunel.ac.uk
+		HttpGet get = new HttpGet(BASE_URL);
+		HttpResponse response = httpClient.execute(get);
 
-			while (line != null) {
-				sb.append(line);
-				sb.append("\n");
-				line = br.readLine();
-			}
-			br.close();
-		} catch (Exception e) {
-			Log.v(TAG, e.toString());
-		}
-		return sb.toString();
-	}
-
-	private String downloadBookDetailsPage() {
-		String result = "";
-		try {
-
-			// Download the homepage library.brunel.ac.uk
-			HttpGet get = new HttpGet(BASE_URL);
-			HttpResponse response = httpClient.execute(get);
-
-			// Find and follow the redirect URL
-			String html = EntityUtils.toString(response.getEntity());
-			Document doc = Jsoup.parse(html);
-			Elements metaTags = doc.select("META");
-			String nextLink = metaTags.first().attr("content");
-			nextLink = nextLink.substring(nextLink.indexOf("URL=") + 4);
-			get = new HttpGet(BASE_URL + nextLink);
-			response = httpClient.execute(get);
-			html = EntityUtils.toString(response.getEntity());
-
-			// Find and submit to the login form's POST URL
-			String postURL = findPostURL(html, "new_session");
-			HttpPost post = new HttpPost(postURL);
-			// TODO: Move away from hard coding user_id
-			String data = "user_id=68566027&password=";
-			post.setEntity(new StringEntity(data));
-			response = httpClient.execute(post);
-			html = EntityUtils.toString(response.getEntity());
-
-			// Click on My Account
-			nextLink = findLinkCalled("My Account", html);
-			get = new HttpGet(nextLink);
-			response = httpClient.execute(get);
-			html = EntityUtils.toString(response.getEntity());
-
-			// Click on Renew My Materials
-			nextLink = findLinkCalled("Renew My Materials", html);
-			get = new HttpGet(nextLink);
-			response = httpClient.execute(get);
-			html = EntityUtils.toString(response.getEntity());
-
-			// Return the page listing all you books
-			return html;
-
-			// TODO Handle error exceptions better
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return result;
-	}
-
-	private String findPostURL(String html, String formName){
-		Log.v(TAG, "finding post URL");
+		// Find and follow the redirect URL
+		String html = EntityUtils.toString(response.getEntity());
 		Document doc = Jsoup.parse(html);
-		Element form = doc.select("form[name="+formName+"]").first();
+		Elements metaTags = doc.select("META");
+		String nextLink = metaTags.first().attr("content");
+		nextLink = nextLink.substring(nextLink.indexOf("URL=") + 4);
+		get = new HttpGet(BASE_URL + nextLink);
+		response = httpClient.execute(get);
+		html = EntityUtils.toString(response.getEntity());
+
+		// Find and submit to the login form's POST URL
+		String postURL = findPostURL(html, "new_session");
+		HttpPost post = new HttpPost(postURL);
+		// TODO: Move away from hard coding user_id
+		String data = "user_id=68566027&password=";
+		post.setEntity(new StringEntity(data));
+		response = httpClient.execute(post);
+		html = EntityUtils.toString(response.getEntity());
+
+		// Click on My Account
+		nextLink = findLinkCalled("My Account", html);
+		get = new HttpGet(nextLink);
+		response = httpClient.execute(get);
+		html = EntityUtils.toString(response.getEntity());
+
+		// Click on Renew My Materials
+		nextLink = findLinkCalled("Renew My Materials", html);
+		get = new HttpGet(nextLink);
+		response = httpClient.execute(get);
+		html = EntityUtils.toString(response.getEntity());
+
+		// Return the page listing all you books
+		return html;
+
+	}
+
+	private String findPostURL(String html, String formName) {
+		Log.v(TAG, "finding post URL in form: " + formName);
+		Document doc = Jsoup.parse(html);
+		Element form = doc.select("form[name=" + formName + "]").first();
 		String postURL = BASE_URL + form.attr("action");
 		Log.v(TAG, "postURL:" + postURL);
 		return postURL;
@@ -201,9 +174,9 @@ public class LibraryBookService extends Service {
 				Log.v(TAG, "Redirecting to: " + redirectURL);
 				return (redirectURL);
 			}
-		} // TODO handle error conditions
+		}
 		Log.e(TAG, "Error: unable to find a link called " + name);
-		return "Error";
+		throw new NullPointerException();
 	}
 
 	private List<Book> renewBooks(String bookDetailsPage) throws IOException {
@@ -238,7 +211,6 @@ public class LibraryBookService extends Service {
 			int timesRenewed = Integer.parseInt(strongTags.get(2).text());
 			books.add(new Book(title, dueDate, timesRenewed));
 		}
-
 		return books;
 	}
 

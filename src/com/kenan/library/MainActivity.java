@@ -18,12 +18,19 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
 	private static final String TAG = MainActivity.class.toString();
-	// TODO Remove
-	public static final boolean DEBUG = false;
+
+	public static final String ERROR_BROADCAST = "com.kenan.library.MainActivity.error";
+	public static final String CONNECTION_ERROR_BROADCAST = ERROR_BROADCAST
+			+ ".connection";
+	public static final String LOGIN_ERROR_BROADCAST = ERROR_BROADCAST
+			+ ".login";
+	public static final String PARSE_ERROR_BROADCAST = ERROR_BROADCAST
+			+ ".parse";
 
 	TextView openingTimes;
 	ListView list;
@@ -45,6 +52,14 @@ public class MainActivity extends Activity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			setOpeningTimes(intent.getExtras().getString(OPENING_TIMES_KEY));
+		}
+	};
+
+	private BroadcastReceiver errorReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO do proper error reporting
+			Toast.makeText(context, "error", Toast.LENGTH_SHORT).show();
 		}
 	};
 
@@ -72,6 +87,8 @@ public class MainActivity extends Activity {
 
 		registerReceiver(openingTimesUpdateReceiver, new IntentFilter(
 				DownloadClosingTimes.UPDATE_OPENING_TIMES_INTENT));
+
+		registerReceiver(errorReceiver, new IntentFilter(ERROR_BROADCAST));
 
 		list = (ListView) findViewById(R.id.list);
 		openingTimes = (TextView) findViewById(R.id.closingTimes);
