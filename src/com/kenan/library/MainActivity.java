@@ -144,6 +144,7 @@ public class MainActivity extends Activity {
 
 	@Override
 	public void onDestroy() {
+		super.onDestroy();
 		unregisterReceiver(listViewUpdateReceiver);
 		unregisterReceiver(openingTimesUpdateReceiver);
 		unregisterReceiver(errorReceiver);
