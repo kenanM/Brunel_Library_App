@@ -1,5 +1,9 @@
 package com.kenan.library;
 
+import static com.kenan.library.MainActivity.CONNECTION_ERROR_BROADCAST;
+import static com.kenan.library.MainActivity.LOGIN_ERROR_BROADCAST;
+import static com.kenan.library.MainActivity.PARSE_ERROR_BROADCAST;
+
 import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.util.LinkedList;
@@ -18,13 +22,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-import static com.kenan.library.MainActivity.*;
 
-public class LibraryBookService extends Service {
+public class LibraryBookService extends IntentService {
 
 	public static final String UPDATED_BOOK_DATABASE_INTENT = "com.kenan.library.downloadbookdetails.update";
 
@@ -39,8 +42,12 @@ public class LibraryBookService extends Service {
 
 	private HttpClient httpClient = new DefaultHttpClient();
 
+	public LibraryBookService() {
+		super(LibraryBookService.class.toString());
+	}
+
 	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
+	protected void onHandleIntent(Intent intent) {
 
 		try {
 			String bookDetailsPage = downloadBookDetailsPage();
@@ -64,8 +71,7 @@ public class LibraryBookService extends Service {
 			sendBroadcast(new Intent(CONNECTION_ERROR_BROADCAST));
 		}
 
-		// Stop the service
-		return START_NOT_STICKY;
+		return;
 	}
 
 	private void updateBookDatabase(List<Book> books) {

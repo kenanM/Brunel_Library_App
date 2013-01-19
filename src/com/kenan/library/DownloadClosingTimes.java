@@ -1,5 +1,8 @@
 package com.kenan.library;
 
+import static com.kenan.library.MainActivity.CONNECTION_ERROR_BROADCAST;
+import static com.kenan.library.MainActivity.PARSE_ERROR_BROADCAST;
+
 import java.io.IOException;
 import java.util.Calendar;
 
@@ -13,17 +16,16 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-import static com.kenan.library.MainActivity.*;
 
 /**
  * Sets a textView (given as parameter) to display the opening times for Brunel
  * library
  */
-public class DownloadClosingTimes extends Service {
+public class DownloadClosingTimes extends IntentService {
 
 	private static final String HOME_PAGE_URL = "http://www.brunel.ac.uk/services/library";
 	private static final String TAG = DownloadClosingTimes.class.toString();
@@ -34,8 +36,13 @@ public class DownloadClosingTimes extends Service {
 	LocalStorage localStorage;
 	int today;
 
+	public DownloadClosingTimes() {
+		super(DownloadClosingTimes.class.toString());
+	}
+
 	@Override
 	public void onCreate() {
+		super.onCreate();
 		localStorage = new LocalStorage(this);
 	}
 
@@ -44,7 +51,7 @@ public class DownloadClosingTimes extends Service {
 	 * preferences
 	 */
 	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
+	protected void onHandleIntent(Intent intent) {
 
 		String openingTimes = localStorage.getOpeningTimes();
 		int dayOfLastUpdate = localStorage.getDayOfOpeningTimesUpdate();
@@ -69,9 +76,7 @@ public class DownloadClosingTimes extends Service {
 		} else {
 			broadcast(openingTimes);
 		}
-
-		// Stop the service
-		return START_NOT_STICKY;
+		return;
 	}
 
 	private void broadcast(String message) {

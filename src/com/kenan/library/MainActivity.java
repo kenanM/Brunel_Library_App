@@ -141,4 +141,11 @@ public class MainActivity extends Activity {
 		bookDataSource.close();
 		lastRefresh.setText(localStorage.getRefreshDate());
 	}
+
+	@Override
+	public void onDestroy() {
+		unregisterReceiver(listViewUpdateReceiver);
+		unregisterReceiver(openingTimesUpdateReceiver);
+		unregisterReceiver(errorReceiver);
+	}
 }
