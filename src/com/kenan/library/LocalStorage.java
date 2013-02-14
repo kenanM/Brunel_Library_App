@@ -19,6 +19,11 @@ public class LocalStorage {
 		public static final String DATE_OF_REFRESH = "date_of_refresh";
 	}
 
+	private static class Login {
+		public static final String USERNAME = "username";
+		public static final String PASSWORD = "password";
+	}
+
 	private Context context;
 	private SharedPreferences preferences;
 	private Editor editor;
@@ -61,5 +66,25 @@ public class LocalStorage {
 		editor = preferences.edit();
 		return preferences.getString(BookDetails.DATE_OF_REFRESH,
 				context.getString(R.string.press_refresh_to_see_your_books));
+	}
+
+	public void setUserNameAndPassword(String username, String password) {
+		preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		editor = preferences.edit();
+		editor.putString(Login.USERNAME, username);
+		editor.putString(Login.PASSWORD, password);
+		editor.commit();
+	}
+
+	public String getUserName() {
+		preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		editor = preferences.edit();
+		return preferences.getString(Login.USERNAME, "");
+	}
+
+	public String getPassword() {
+		preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		editor = preferences.edit();
+		return preferences.getString(Login.PASSWORD, "");
 	}
 }

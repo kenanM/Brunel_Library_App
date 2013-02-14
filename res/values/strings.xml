@@ -12,4 +12,11 @@
     <string name="closing_times_error">Error getting closing times</string>
     <string name="press_refresh_to_see_your_books">Press refresh to see your books.</string>
 	<string name="renew_all_books">Renew all Books</string>
+	<string name="login">Login</string>
+	<string name="logged_in">Logged in successfully</string>
+	<string name="login_invalid">There was an error logging in</string>
+	<string name="attempting_login">Logging in ... Please Wait</string>
+	<string name="pin_description">Pin (may be left blank)</string>
+	<string name="library_card_number">Library Card Number</string>
+	<string name="missing_id">User ID missing</string>
 </resources>

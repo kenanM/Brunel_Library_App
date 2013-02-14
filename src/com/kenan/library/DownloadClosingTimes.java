@@ -1,7 +1,7 @@
 package com.kenan.library;
 
-import static com.kenan.library.MainActivity.CONNECTION_ERROR_BROADCAST;
-import static com.kenan.library.MainActivity.PARSE_ERROR_BROADCAST;
+import static com.kenan.library.LibraryBookService.CONNECTION_ERROR_BROADCAST;
+import static com.kenan.library.LibraryBookService.PARSE_ERROR_BROADCAST;
 
 import java.io.IOException;
 import java.util.Calendar;

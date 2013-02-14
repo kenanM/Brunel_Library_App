@@ -1,13 +1,10 @@
 package com.kenan.library;
 
-import static com.kenan.library.MainActivity.CONNECTION_ERROR_BROADCAST;
-import static com.kenan.library.MainActivity.LOGIN_ERROR_BROADCAST;
-import static com.kenan.library.MainActivity.PARSE_ERROR_BROADCAST;
-
 import java.io.IOException;
-import java.security.InvalidParameterException;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.security.auth.login.LoginException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
@@ -30,6 +27,14 @@ import android.util.Log;
 public class LibraryBookService extends IntentService {
 
 	public static final String UPDATED_BOOK_DATABASE_INTENT = "com.kenan.library.downloadbookdetails.update";
+
+	public static final String ERROR_BROADCAST = "com.kenan.library.MainActivity.error";
+	public static final String CONNECTION_ERROR_BROADCAST = ERROR_BROADCAST
+			+ ".connection";
+	public static final String PARSE_ERROR_BROADCAST = ERROR_BROADCAST
+			+ ".parse";
+	public static final String INVALID_LOGIN = ERROR_BROADCAST
+			+ ".invalidlogin";
 
 	private static final String BASE_URL = "http://library.brunel.ac.uk";
 	private static final String TAG = "DownloadBookDetails";
@@ -63,12 +68,14 @@ public class LibraryBookService extends IntentService {
 				sendBroadcast(new Intent(UPDATED_BOOK_DATABASE_INTENT));
 			}
 
-		} catch (InvalidParameterException e) {
-			sendBroadcast(new Intent(LOGIN_ERROR_BROADCAST));
 		} catch (NullPointerException e) {
 			sendBroadcast(new Intent(PARSE_ERROR_BROADCAST));
 		} catch (IOException e) {
 			sendBroadcast(new Intent(CONNECTION_ERROR_BROADCAST));
+		} catch (LoginException e) {
+			sendBroadcast(new Intent(INVALID_LOGIN));
+		} finally {
+			Log.i(TAG, "exception caught");
 		}
 
 		return;
@@ -120,11 +127,12 @@ public class LibraryBookService extends IntentService {
 	}
 
 	private String downloadBookDetailsPage() throws ParseException,
-			IOException, InvalidParameterException {
+			IOException, LoginException {
 
 		// Download the homepage library.brunel.ac.uk
 		HttpGet get = new HttpGet(BASE_URL);
 		HttpResponse response = httpClient.execute(get);
+		Log.i(TAG, "homePage downloaded");
 
 		// Find and follow the redirect URL
 		String html = EntityUtils.toString(response.getEntity());
@@ -139,11 +147,22 @@ public class LibraryBookService extends IntentService {
 		// Find and submit to the login form's POST URL
 		String postURL = findPostURL(html, "new_session");
 		HttpPost post = new HttpPost(postURL);
-		// TODO: Move away from hard coding user_id
-		String data = "user_id=68566027&password=";
+
+		LocalStorage localStorage = new LocalStorage(this);
+		String data = "user_id=" + localStorage.getUserName() + "&password="
+				+ localStorage.getPassword();
+		Log.i(TAG, "posting: " + data);
 		post.setEntity(new StringEntity(data));
 		response = httpClient.execute(post);
 		html = EntityUtils.toString(response.getEntity());
+
+		// check for successful login
+		if (html.contains("<li>Invalid login</li>")) {
+			Log.e(TAG, "Invalid Login");
+			throw new LoginException();
+		} else {
+			Log.i(TAG, html);
+		}
 
 		// Click on My Account
 		nextLink = findLinkCalled("My Account", html);
@@ -188,8 +207,9 @@ public class LibraryBookService extends IntentService {
 	private List<Book> renewBooks(String bookDetailsPage) throws IOException {
 		String postURL = findPostURL(bookDetailsPage, "renewitems");
 		HttpPost post = new HttpPost(postURL);
-		// TODO move away from hardcoded user_id
-		String data = "user_id=68566027&selection_type=all";
+		LocalStorage localStorage = new LocalStorage(this);
+		String data = "user_id=" + localStorage.getUserName()
+				+ "&selection_type=all";
 		post.setEntity(new StringEntity(data));
 		HttpResponse response = httpClient.execute(post);
 		return parseRenewedBooksPage(EntityUtils.toString(response.getEntity()));
