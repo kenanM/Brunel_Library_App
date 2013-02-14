@@ -74,6 +74,8 @@ public class LibraryBookService extends IntentService {
 			sendBroadcast(new Intent(CONNECTION_ERROR_BROADCAST));
 		} catch (LoginException e) {
 			sendBroadcast(new Intent(INVALID_LOGIN));
+			LocalStorage localStorage = new LocalStorage(this);
+			localStorage.setUserNameAndPassword("", "");
 		} finally {
 			Log.i(TAG, "exception caught");
 		}

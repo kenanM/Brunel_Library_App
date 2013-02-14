@@ -30,8 +30,8 @@ public class LoginActivity extends SherlockActivity {
 		info = (TextView) findViewById(R.id.info);
 
 		LocalStorage localStorage = new LocalStorage(this);
-		username.setText(localStorage.getUserName());
-		password.setText(localStorage.getPassword());
+		if (!localStorage.getUserName().equals(""))
+			startActivity(new Intent(LoginActivity.this, MainActivity.class));
 
 		loginButton = (Button) findViewById(R.id.loginButton);
 		loginButton.setOnClickListener(new LoginClickListener());
