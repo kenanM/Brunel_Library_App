@@ -27,7 +27,6 @@ public class MainActivity extends SherlockActivity {
 	TextView lastRefresh;
 
 	BookAdapter bookAdapter;
-	LocalStorage localStorage;
 
 	private BroadcastReceiver listViewUpdateReceiver = new BroadcastReceiver() {
 		@Override
@@ -56,8 +55,6 @@ public class MainActivity extends SherlockActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		localStorage = new LocalStorage(this);
-
 		registerReceiver(listViewUpdateReceiver, new IntentFilter(
 				LibraryBookService.UPDATED_BOOK_DATABASE_INTENT));
 
@@ -81,7 +78,7 @@ public class MainActivity extends SherlockActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		lastRefresh.setText(localStorage.getRefreshDate());
+		lastRefresh.setText(LocalStorage.getRefreshDate(this));
 		startService(new Intent(this, DownloadClosingTimes.class));
 	}
 
@@ -114,7 +111,7 @@ public class MainActivity extends SherlockActivity {
 		BookDataSource bookDataSource = new BookDataSource(this);
 		bookAdapter.changeCursor(bookDataSource.getCursor());
 		bookDataSource.close();
-		lastRefresh.setText(localStorage.getRefreshDate());
+		lastRefresh.setText(LocalStorage.getRefreshDate(this));
 	}
 
 	@Override

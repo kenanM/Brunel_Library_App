@@ -24,67 +24,60 @@ public class LocalStorage {
 		public static final String PASSWORD = "password";
 	}
 
-	private Context context;
-	private SharedPreferences preferences;
-	private Editor editor;
-
-	public LocalStorage(Context context) {
-		this.context = context;
+	private static Editor getEditor(Context context) {
+		return getPreferences(context).edit();
 	}
 
-	public void updateOpeningTimes(String openingTimes) {
+	private static SharedPreferences getPreferences(Context context) {
+		return PreferenceManager.getDefaultSharedPreferences(context);
+
+	}
+
+	public static void updateOpeningTimes(Context context, String openingTimes) {
 		int today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
-		preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		editor = preferences.edit();
+		Editor editor = getEditor(context);
 		editor.putInt(OpeningTimes.DAY_OF_UPDATE, today);
 		editor.putString(OpeningTimes.VALUE, openingTimes);
 		editor.commit();
 	}
 
-	public String getOpeningTimes() {
-		preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		editor = preferences.edit();
+	public static String getOpeningTimes(Context context) {
+		SharedPreferences preferences = PreferenceManager
+				.getDefaultSharedPreferences(context);
 		return preferences.getString(OpeningTimes.VALUE, "");
 	}
 
-	public int getDayOfOpeningTimesUpdate() {
-		return preferences.getInt(OpeningTimes.DAY_OF_UPDATE, -1);
+	public static int getDayOfOpeningTimesUpdate(Context context) {
+		return getPreferences(context).getInt(OpeningTimes.DAY_OF_UPDATE, -1);
 	}
 
-	public void updateLastRefreshDate() {
+	public static void updateLastRefreshDate(Context context) {
 		Calendar today = Calendar.getInstance();
 		DateFormat formatter = DateFormat.getDateTimeInstance();
 		String time = formatter.format(today.getTime());
-		preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		editor = preferences.edit();
+		Editor editor = getEditor(context);
 		editor.putString(BookDetails.DATE_OF_REFRESH, time);
 		editor.commit();
 	}
 
-	public String getRefreshDate() {
-		preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		editor = preferences.edit();
-		return preferences.getString(BookDetails.DATE_OF_REFRESH,
+	public static String getRefreshDate(Context context) {
+		return getPreferences(context).getString(BookDetails.DATE_OF_REFRESH,
 				context.getString(R.string.press_refresh_to_see_your_books));
 	}
 
-	public void setUserNameAndPassword(String username, String password) {
-		preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		editor = preferences.edit();
+	public static void setUserNameAndPassword(Context context, String username,
+			String password) {
+		Editor editor = getEditor(context);
 		editor.putString(Login.USERNAME, username);
 		editor.putString(Login.PASSWORD, password);
 		editor.commit();
 	}
 
-	public String getUserName() {
-		preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		editor = preferences.edit();
-		return preferences.getString(Login.USERNAME, "");
+	public static String getUserName(Context context) {
+		return getPreferences(context).getString(Login.USERNAME, "");
 	}
 
-	public String getPassword() {
-		preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		editor = preferences.edit();
-		return preferences.getString(Login.PASSWORD, "");
+	public static String getPassword(Context context) {
+		return getPreferences(context).getString(Login.PASSWORD, "");
 	}
 }

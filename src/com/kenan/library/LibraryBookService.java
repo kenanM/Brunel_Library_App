@@ -74,8 +74,7 @@ public class LibraryBookService extends IntentService {
 			sendBroadcast(new Intent(CONNECTION_ERROR_BROADCAST));
 		} catch (LoginException e) {
 			sendBroadcast(new Intent(INVALID_LOGIN));
-			LocalStorage localStorage = new LocalStorage(this);
-			localStorage.setUserNameAndPassword("", "");
+			LocalStorage.setUserNameAndPassword(this, "", "");
 		} finally {
 			Log.i(TAG, "exception caught");
 		}
@@ -88,7 +87,7 @@ public class LibraryBookService extends IntentService {
 		dataSource.deleteBooks();
 		dataSource.addBooks(books);
 		dataSource.close();
-		new LocalStorage(this).updateLastRefreshDate();
+		LocalStorage.updateLastRefreshDate(this);
 	}
 
 	private List<Book> parse(String html) throws ParseException {
@@ -150,9 +149,8 @@ public class LibraryBookService extends IntentService {
 		String postURL = findPostURL(html, "new_session");
 		HttpPost post = new HttpPost(postURL);
 
-		LocalStorage localStorage = new LocalStorage(this);
-		String data = "user_id=" + localStorage.getUserName() + "&password="
-				+ localStorage.getPassword();
+		String data = "user_id=" + LocalStorage.getUserName(this)
+				+ "&password=" + LocalStorage.getPassword(this);
 		Log.i(TAG, "posting: " + data);
 		post.setEntity(new StringEntity(data));
 		response = httpClient.execute(post);
@@ -209,8 +207,7 @@ public class LibraryBookService extends IntentService {
 	private List<Book> renewBooks(String bookDetailsPage) throws IOException {
 		String postURL = findPostURL(bookDetailsPage, "renewitems");
 		HttpPost post = new HttpPost(postURL);
-		LocalStorage localStorage = new LocalStorage(this);
-		String data = "user_id=" + localStorage.getUserName()
+		String data = "user_id=" + LocalStorage.getUserName(this)
 				+ "&selection_type=all";
 		post.setEntity(new StringEntity(data));
 		HttpResponse response = httpClient.execute(post);

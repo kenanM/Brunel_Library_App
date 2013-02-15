@@ -33,17 +33,10 @@ public class DownloadClosingTimes extends IntentService {
 	public static final String OPENING_TIMES_KEY = "closing times";
 
 	String openingTimes;
-	LocalStorage localStorage;
 	int today;
 
 	public DownloadClosingTimes() {
 		super(DownloadClosingTimes.class.toString());
-	}
-
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		localStorage = new LocalStorage(this);
 	}
 
 	/**
@@ -53,8 +46,8 @@ public class DownloadClosingTimes extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 
-		String openingTimes = localStorage.getOpeningTimes();
-		int dayOfLastUpdate = localStorage.getDayOfOpeningTimesUpdate();
+		String openingTimes = LocalStorage.getOpeningTimes(this);
+		int dayOfLastUpdate = LocalStorage.getDayOfOpeningTimesUpdate(this);
 		today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
 
 		if (dayOfLastUpdate != today || openingTimes.equals("")) {
@@ -69,7 +62,7 @@ public class DownloadClosingTimes extends IntentService {
 			}
 		}
 
-		openingTimes = localStorage.getOpeningTimes();
+		openingTimes = LocalStorage.getOpeningTimes(this);
 
 		if (openingTimes.equals("")) {
 			broadcast(getString(R.string.closing_times_error));
@@ -92,7 +85,7 @@ public class DownloadClosingTimes extends IntentService {
 		String homePage = EntityUtils.toString(response.getEntity());
 		openingTimes = parseHomePage(homePage);
 
-		localStorage.updateOpeningTimes(openingTimes);
+		LocalStorage.updateOpeningTimes(this, openingTimes);
 	}
 
 	/** Extracts out the Opening-times */
