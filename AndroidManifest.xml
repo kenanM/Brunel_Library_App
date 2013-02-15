@@ -16,7 +16,8 @@
         android:theme="@style/Theme.Sherlock.Light" >
         <activity
             android:name=".LoginActivity"
-            android:label="@string/title_activity_main" >
+            android:label="@string/title_activity_main"
+            android:noHistory="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
