@@ -10,5 +10,10 @@
         android:onClick="renewAllClicked"
         android:showAsAction="always"
         android:title="Renew All"/>
+    <item
+        android:id="@+id/logoout"
+        android:onClick="logoutClicked"
+        android:showAsAction="always"
+        android:title="Logout"/>
 
 </menu>

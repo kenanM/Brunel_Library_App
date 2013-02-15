@@ -106,6 +106,12 @@ public class MainActivity extends SherlockActivity {
 		startService(intent);
 	}
 
+	// Warning: Proguard must exempt this method
+	public void logoutClicked(MenuItem menuItem) {
+		LocalStorage.setUserNameAndPassword(this, "", "");
+		startActivity(new Intent(this, LoginActivity.class));
+	}
+
 	private void refreshList() {
 		Log.v(TAG, "refreshing list");
 		BookDataSource bookDataSource = new BookDataSource(this);
