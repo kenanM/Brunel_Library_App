@@ -4,7 +4,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="7"
+        android:minSdkVersion="9"
         android:targetSdkVersion="15" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -16,7 +16,6 @@
         android:theme="@style/Theme.Sherlock.Light" >
         <activity
             android:name=".LoginActivity"
-            android:label="@string/title_activity_main"
             android:noHistory="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
