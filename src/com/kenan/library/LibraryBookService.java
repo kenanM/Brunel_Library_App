@@ -105,8 +105,8 @@ public class LibraryBookService extends IntentService {
 		}
 
 		Elements strongTags = doc.getElementsByTag("strong");
-		int itemsEligibleForRenewal = Integer.parseInt(strongTags.remove(0)
-				.text());
+		int itemsEligibleForRenewal = Integer.getInteger(strongTags.remove(0)
+				.text(), 0);
 
 		if (labels.size() != itemsEligibleForRenewal) {
 			Log.e(TAG, "Parsing disreprenceny!");
@@ -118,7 +118,7 @@ public class LibraryBookService extends IntentService {
 			Element label = labels.get(i);
 			Element date = strongTags.get(i * 2);
 			Element renewalElement = strongTags.get(i * 2 + 1);
-			int renewals = Integer.parseInt(renewalElement.text());
+			int renewals = Integer.getInteger(renewalElement.text(), 0);
 			Log.v(TAG, "Label: " + label.text());
 			Log.v(TAG, "date: " + date.text());
 			Log.v(TAG, "Renewals: " + renewals);
