@@ -70,13 +70,16 @@ public class LibraryBookService extends IntentService {
 
 		} catch (NullPointerException e) {
 			sendBroadcast(new Intent(PARSE_ERROR_BROADCAST));
+			Log.i(TAG, "exception caught");
 		} catch (IOException e) {
 			sendBroadcast(new Intent(CONNECTION_ERROR_BROADCAST));
+			Log.i(TAG, "exception caught");
 		} catch (LoginException e) {
 			sendBroadcast(new Intent(INVALID_LOGIN));
 			LocalStorage.setUserNameAndPassword(this, "", "");
-		} finally {
 			Log.i(TAG, "exception caught");
+		} finally {
+
 		}
 
 		return;
@@ -110,7 +113,7 @@ public class LibraryBookService extends IntentService {
 
 		if (labels.size() != itemsEligibleForRenewal) {
 			Log.e(TAG, "Parsing disreprenceny!");
-			throw new ParseException();
+			// throw new ParseException();
 		}
 
 		List<Book> books = new LinkedList<Book>();
@@ -233,7 +236,7 @@ public class LibraryBookService extends IntentService {
 			String title = element.text();
 			Elements strongTags = element.getElementsByTag("strong");
 			String dueDate = strongTags.get(0).text();
-			int timesRenewed = Integer.parseInt(strongTags.get(2).text());
+			int timesRenewed = Integer.getInteger(strongTags.get(2).text(), 0);
 			books.add(new Book(title, dueDate, timesRenewed));
 		}
 		return books;
