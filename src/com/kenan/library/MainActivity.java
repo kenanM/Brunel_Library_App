@@ -78,7 +78,11 @@ public class MainActivity extends SherlockActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		lastRefresh.setText(LocalStorage.getRefreshDate(this));
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		String lastRefreshText = studentDataSource.getLastRefreshDate();
+		studentDataSource.close();
+
+		lastRefresh.setText(lastRefreshText);
 		startService(new Intent(this, DownloadClosingTimes.class));
 	}
 
@@ -108,7 +112,11 @@ public class MainActivity extends SherlockActivity {
 
 	// Warning: Proguard must exempt this method
 	public void logoutClicked(MenuItem menuItem) {
-		LocalStorage.setUserNameAndPassword(this, "", "");
+		// TODO this needs to also delete the books in the bookDataSource
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		studentDataSource.logOut();
+		studentDataSource.close();
+
 		startActivity(new Intent(this, LoginActivity.class));
 	}
 
@@ -117,7 +125,11 @@ public class MainActivity extends SherlockActivity {
 		BookDataSource bookDataSource = new BookDataSource(this);
 		bookAdapter.changeCursor(bookDataSource.getCursor());
 		bookDataSource.close();
-		lastRefresh.setText(LocalStorage.getRefreshDate(this));
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		String refreshDate = studentDataSource.getLastRefreshDate();
+		studentDataSource.close();
+
+		lastRefresh.setText(refreshDate);
 	}
 
 	@Override

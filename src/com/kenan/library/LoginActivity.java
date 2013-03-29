@@ -29,8 +29,10 @@ public class LoginActivity extends SherlockActivity {
 		password = (TextView) findViewById(R.id.password);
 		info = (TextView) findViewById(R.id.info);
 
-		if (!LocalStorage.getUserName(this).equals(""))
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		if (!studentDataSource.getUsername().equals(""))
 			startActivity(new Intent(LoginActivity.this, MainActivity.class));
+		studentDataSource.close();
 
 		loginButton = (Button) findViewById(R.id.loginButton);
 		loginButton.setOnClickListener(new LoginClickListener());
@@ -54,8 +56,12 @@ public class LoginActivity extends SherlockActivity {
 			info.setText(getString(R.string.missing_id));
 		} else {
 			info.setText(getString(R.string.attempting_login));
-			LocalStorage.setUserNameAndPassword(this, username.getText()
-					.toString(), password.getText().toString());
+
+			StudentDataSource studentDataSource = new StudentDataSource(this);
+			studentDataSource.setUsernameAndPIN(username.getText().toString(),
+					password.getText().toString());
+			studentDataSource.close();
+
 			startService(new Intent(LoginActivity.this,
 					LibraryBookService.class));
 		}

@@ -76,7 +76,10 @@ public class LibraryBookService extends IntentService {
 			Log.i(TAG, "exception caught");
 		} catch (LoginException e) {
 			sendBroadcast(new Intent(INVALID_LOGIN));
-			LocalStorage.setUserNameAndPassword(this, "", "");
+			StudentDataSource studentDataSource = new StudentDataSource(this);
+			studentDataSource.logOut();
+			studentDataSource.close();
+			// TODO this also needs to clear the book datasource
 			Log.i(TAG, "exception caught");
 		} finally {
 
@@ -90,7 +93,10 @@ public class LibraryBookService extends IntentService {
 		dataSource.deleteBooks();
 		dataSource.addBooks(books);
 		dataSource.close();
-		LocalStorage.updateLastRefreshDate(this);
+
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		studentDataSource.updateLastRefreshDate();
+		studentDataSource.close();
 	}
 
 	private List<Book> parse(String html) throws ParseException {
@@ -152,8 +158,11 @@ public class LibraryBookService extends IntentService {
 		String postURL = findPostURL(html, "new_session");
 		HttpPost post = new HttpPost(postURL);
 
-		String data = "user_id=" + LocalStorage.getUserName(this)
-				+ "&password=" + LocalStorage.getPassword(this);
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		String data = "user_id=" + studentDataSource.getUsername()
+				+ "&password=" + studentDataSource.getPIN();
+		studentDataSource.close();
+
 		Log.i(TAG, "posting: " + data);
 		post.setEntity(new StringEntity(data));
 		response = httpClient.execute(post);
@@ -210,7 +219,8 @@ public class LibraryBookService extends IntentService {
 	private List<Book> renewBooks(String bookDetailsPage) throws IOException {
 		String postURL = findPostURL(bookDetailsPage, "renewitems");
 		HttpPost post = new HttpPost(postURL);
-		String data = "user_id=" + LocalStorage.getUserName(this)
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		String data = "user_id=" + studentDataSource.getUsername()
 				+ "&selection_type=all";
 		post.setEntity(new StringEntity(data));
 		HttpResponse response = httpClient.execute(post);

@@ -45,9 +45,10 @@ public class DownloadClosingTimes extends IntentService {
 	 */
 	@Override
 	protected void onHandleIntent(Intent intent) {
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		String openingTimes = studentDataSource.getOpeningTimes();
+		int dayOfLastUpdate = studentDataSource.getDayOfOpeningTimesUpdate();
 
-		String openingTimes = LocalStorage.getOpeningTimes(this);
-		int dayOfLastUpdate = LocalStorage.getDayOfOpeningTimesUpdate(this);
 		today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
 
 		if (dayOfLastUpdate != today || openingTimes.equals("")) {
@@ -62,7 +63,8 @@ public class DownloadClosingTimes extends IntentService {
 			}
 		}
 
-		openingTimes = LocalStorage.getOpeningTimes(this);
+		openingTimes = studentDataSource.getOpeningTimes();
+		studentDataSource.close();
 
 		if (openingTimes.equals("")) {
 			broadcast(getString(R.string.closing_times_error));
@@ -85,7 +87,9 @@ public class DownloadClosingTimes extends IntentService {
 		String homePage = EntityUtils.toString(response.getEntity());
 		openingTimes = parseHomePage(homePage);
 
-		LocalStorage.updateOpeningTimes(this, openingTimes);
+		StudentDataSource studentDataSource = new StudentDataSource(this);
+		studentDataSource.updateOpeningTimes(openingTimes);
+		studentDataSource.close();
 	}
 
 	/** Extracts out the Opening-times */
